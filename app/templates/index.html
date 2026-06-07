@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortly</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-2xl bg-slate-900 rounded-2xl shadow-2xl border border-green-900/50 p-8">
+        <header class="text-center mb-10">
+            <h1 class="text-5xl font-bold text-green-500 mb-2">Shortly</h1>
+            <p class="text-slate-400">Make your links short.</p>
+        </header>
+
+        <div id="error-container" class="hidden mb-6 p-4 bg-red-900/30 border border-red-500/50 rounded-lg text-red-200 text-sm">
+        </div>
+
+        <div id="result-container" class="hidden mb-10 p-6 bg-green-900/20 border border-green-500/30 rounded-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h2 class="text-xl font-semibold text-green-400 mb-4">Shortened URL Created!</h2>
+            <div class="space-y-4">
+                <div>
+                    <p class="text-xs uppercase tracking-wider text-slate-500 mb-1">Short Link</p>
+                    <div class="flex items-center gap-2">
+                        <input type="text" readonly value="" id="shortUrl" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-green-400 font-mono focus:outline-none">
+                        <button onclick="copyToClipboard(event)" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors">Copy</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-800">
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-slate-500 mb-1">Original URL</p>
+                        <p id="original-url" class="truncate text-slate-300" title=""></p>
+                    </div>
+                    <div>
+                        <p class="text-xs uppercase tracking-wider text-slate-500 mb-1">Created At</p>
+                        <p id="created-at" class="text-slate-300"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form id="shorten-form" class="space-y-4">
+            <div>
+                <label for="long_url" class="block text-sm font-medium text-slate-400 mb-2">Enter your long URL</label>
+                <div class="relative">
+                    <input 
+                        type="url" 
+                        name="long_url" 
+                        id="long_url" 
+                        required 
+                        placeholder="https://example.com/very-long-path-to-something" 
+                        class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-4 text-slate-200 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all"
+                    >
+                </div>
+            </div>
+            <button type="submit" id="submit-btn" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-green-900/20 transform active:scale-[0.98] transition-all">
+                Shorten URL
+            </button>
+        </form>
+
+        <footer class="mt-12 text-center text-slate-500 text-sm">
+            &copy; 2026 Shortly.
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById('shorten-form');
+        const errorContainer = document.getElementById('error-container');
+        const resultContainer = document.getElementById('result-container');
+        const shortUrlInput = document.getElementById('shortUrl');
+        const originalUrlText = document.getElementById('original-url');
+        const createdAtText = document.getElementById('created-at');
+        const submitBtn = document.getElementById('submit-btn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const longUrl = document.getElementById('long_url').value;
+            
+            // Reset state
+            errorContainer.classList.add('hidden');
+            resultContainer.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Shortening...';
+
+            try {
+                const response = await fetch('/api/urls/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ long_url: longUrl }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    if (response.status === 422) {
+                        const errorDetail = data.detail;
+                        if (Array.isArray(errorDetail)) {
+                            throw new Error(errorDetail.map(err => err.msg).join(', '));
+                        }
+                        throw new Error(errorDetail || 'Validation error');
+                    }
+                    throw new Error(data.detail || 'Something went wrong');
+                }
+
+                // Show results
+                const baseUrl = window.location.origin + '/api/urls/';
+                shortUrlInput.value = baseUrl + data.short_code;
+                originalUrlText.innerText = data.long_url;
+                originalUrlText.title = data.long_url;
+                
+                const date = new Date(data.created_at);
+                createdAtText.innerText = date.toLocaleString();
+                
+                resultContainer.classList.remove('hidden');
+                form.reset();
+            } catch (error) {
+                errorContainer.innerText = error.message;
+                errorContainer.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Shorten URL';
+            }
+        });
+
+        function copyToClipboard(event) {
+            const copyText = document.getElementById("shortUrl");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "Copied!";
+            btn.classList.replace('bg-green-600', 'bg-slate-700');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.replace('bg-slate-700', 'bg-green-600');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
