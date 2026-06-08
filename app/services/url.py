@@ -5,8 +5,10 @@ from models import URL, URLCreate
 from utils.shortener import generate_short_code
 
 
-async def create_url(url_create: URLCreate, session: AsyncSession) -> URL:
-    url = URL(long_url=str(url_create.long_url))
+async def create_url(
+    url_create: URLCreate, session: AsyncSession, user_id: int | None = None
+) -> URL:
+    url = URL(long_url=str(url_create.long_url), user_id=user_id)
 
     session.add(url)
     await session.flush()
@@ -26,3 +28,9 @@ async def get_url_by_code(short_code: str, session: AsyncSession) -> URL | None:
     res = await session.execute(stmt)
 
     return res.scalar_one_or_none()
+
+
+async def get_user_urls(user_id: int, session: AsyncSession) -> list[URL]:
+    stmt = select(URL).where(URL.user_id == user_id)
+    res = await session.execute(stmt)
+    return list(res.scalars().all())

@@ -1,12 +1,55 @@
-# Python-generated files
+# Python
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+*.so
+.Python
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
 wheels/
-*.egg-info
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Virtual environments
+# Environment variables
+.env
 .venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-app.db
+# SQLite
+*.db
+*.sqlite3
+
+# Pytest
+.pytest_cache/
+.pytest_cache
+.coverage
+htmlcov/
+
+# VS Code
+.vscode/
+
+# MyPy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# OS specific
+.DS_Store
+Thumbs.db

@@ -8,6 +8,25 @@ dependencies = [
     "aiosqlite>=0.22.1",
     "fastapi[standard]>=0.136.3",
     "jinja2>=3.1.6",
+    "pwdlib[argon2]>=0.3.0",
+    "pyjwt>=2.13.0",
     "python-multipart>=0.0.32",
     "sqlmodel>=0.0.38",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["app"]
+asyncio_mode = "strict"
+
+[tool.pyright]
+extraPaths = ["app"]
+executionEnvironments = [
+  { root = "app" }
 ]
