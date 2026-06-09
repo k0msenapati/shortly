@@ -19,6 +19,8 @@ class URL(SQLModel, table=True):
         min_length=7,
         max_length=20,
     )
+    total_clicks: int = Field(default=0)
+    qr_clicks: int = Field(default=0)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         nullable=False,
@@ -45,4 +47,6 @@ class URLRead(SQLModel):
     id: int
     long_url: str
     short_code: str
+    total_clicks: int
+    qr_clicks: int
     created_at: datetime

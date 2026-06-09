@@ -18,8 +18,6 @@
             <h1 class="text-3xl font-serif font-bold text-white">Dashboard</h1>
             <nav class="hidden md:flex items-center gap-6">
                 <a href="/dashboard" class="text-xs font-bold uppercase tracking-widest text-brand-500">Links</a>
-                <a href="javascript:void(0)" onclick="alert('Analytics feature is coming soon!')" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Analytics</a>
-                <a href="javascript:void(0)" onclick="alert('Settings feature is coming soon!')" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Settings</a>
                 <a href="/profile" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Profile</a>
             </nav>
         </div>
@@ -32,11 +30,7 @@
     </div>
 
     <!-- Metrics Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="boxy-card p-6">
-            <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">Active</span>
-            <div class="text-3xl font-bold text-brand-500">0</div>
-        </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="boxy-card p-6">
             <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">Total Links</span>
             <div class="text-3xl font-bold text-white" id="total-links">0</div>
@@ -45,9 +39,9 @@
             <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">Total Clicks</span>
             <div class="text-3xl font-bold text-white" id="total-clicks">0</div>
         </div>
-        <div class="boxy-card p-6 cursor-help" onclick="alert('QR Tracking is currently in development.')">
+        <div class="boxy-card p-6">
             <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">QR Scans</span>
-            <div class="text-3xl font-bold text-white">0</div>
+            <div class="text-3xl font-bold text-white" id="qr-scans">0</div>
         </div>
     </div>
 
@@ -99,11 +93,6 @@
                     class="w-full">
             </div>
 
-            <label class="flex items-center gap-3 cursor-pointer" onclick="alert('QR Code generation will be available in the next update!')">
-                <input type="checkbox" id="qr_code" disabled class="w-4 h-4 bg-ui-bg border-ui-border text-brand-500 rounded-none focus:ring-0 opacity-50">
-                <span class="text-xs font-bold uppercase tracking-widest text-ui-muted">Generate QR Code (Coming Soon)</span>
-            </label>
-
             <div id="modal-error" class="hidden text-rose-500 text-[10px] font-bold uppercase tracking-widest"></div>
             
             <div class="flex gap-4 pt-6">
@@ -113,10 +102,34 @@
         </form>
     </div>
 </div>
+
+<!-- QR Viewer Modal -->
+<div id="qr-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-ui-bg/90 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
+    <div class="relative boxy-card w-full max-w-xs p-10 bg-white text-center">
+        <h3 id="qr-modal-title" class="text-[10px] uppercase tracking-widest text-black font-bold mb-6">QR Code</h3>
+        <div id="dashboard-qrcode" class="flex justify-center mb-6"></div>
+        <button onclick="document.getElementById('qr-modal').classList.add('hidden')" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-black">Close</button>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+    function showQR(shortCode) {
+        const fullUrl = window.location.origin + '/api/urls/' + shortCode + '?src=qr';
+        const qrContainer = document.getElementById("dashboard-qrcode");
+        qrContainer.innerHTML = "";
+        new QRCode(qrContainer, {
+            text: fullUrl,
+            width: 200,
+            height: 200,
+            colorDark : "#000000",
+            colorLight : "#ffffff"
+        });
+        document.getElementById('qr-modal').classList.remove('hidden');
+    }
+
     async function loadDashboard() {
         try {
             const response = await fetchWithAuth('/api/urls/');
@@ -125,41 +138,58 @@
             const urls = await response.json();
             const body = document.getElementById('urls-body');
             const totalLinksEl = document.getElementById('total-links');
+            const totalClicksEl = document.getElementById('total-clicks');
+            const qrScansEl = document.getElementById('qr-scans');
             
-            totalLinksEl.innerText = urls.length;
+            if (totalLinksEl) totalLinksEl.innerText = urls.length;
+            
+            let totalClicks = 0;
+            let totalQR = 0;
             
             if (urls.length === 0) {
-                body.innerHTML = `<tr><td colspan="5" class="px-6 py-20 text-center text-ui-muted text-[10px] uppercase tracking-[0.2em] font-bold">No links created yet</td></tr>`;
+                if (body) body.innerHTML = `<tr><td colspan="5" class="px-6 py-20 text-center text-ui-muted text-[10px] uppercase tracking-[0.2em] font-bold">No links created yet</td></tr>`;
+                if (totalClicksEl) totalClicksEl.innerText = '0';
+                if (qrScansEl) qrScansEl.innerText = '0';
                 return;
             }
 
-            body.innerHTML = '';
+            if (body) body.innerHTML = '';
             const baseUrl = window.location.origin + '/api/urls/';
             
             urls.forEach(url => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-ui-card/50';
-                const date = new Date(url.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                totalClicks += url.total_clicks || 0;
+                totalQR += url.qr_clicks || 0;
                 
-                row.innerHTML = `
-                    <td class="px-6 py-5">
-                        <div class="flex flex-col gap-1">
-                            <span class="text-brand-500 font-bold text-sm tracking-tight">/${url.short_code}</span>
-                            <span class="text-[10px] text-ui-muted truncate max-w-[200px]" title="${url.long_url}">${url.long_url}</span>
-                        </div>
-                    </td>
-                    <td class="px-6 py-5 text-center text-sm font-bold text-white">0</td>
-                    <td class="px-6 py-5 text-center text-sm font-bold text-ui-muted">0</td>
-                    <td class="px-6 py-5 text-center text-[10px] text-ui-muted font-bold uppercase tracking-widest">${date}</td>
-                    <td class="px-6 py-5 text-right">
-                        <div class="flex justify-end gap-3">
-                            <button onclick="copyToClipboard('${baseUrl}${url.short_code}', this)" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white">Copy</button>
-                            <a href="/urls/${url.short_code}/details" class="text-[10px] font-bold uppercase tracking-widest text-brand-500 hover:text-brand-400">Stats</a>
-                        </div>
-                    </td>
-                `;
-                body.appendChild(row);
+                if (body) {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-ui-card/50';
+                    const date = new Date(url.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-5">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-brand-500 font-bold text-sm tracking-tight">/${url.short_code}</span>
+                                <span class="text-[10px] text-ui-muted truncate max-w-[200px]" title="${url.long_url}">${url.long_url}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 text-center text-sm font-bold text-white">${url.total_clicks || 0}</td>
+                        <td class="px-6 py-5 text-center text-sm font-bold text-ui-muted">${url.qr_clicks || 0}</td>
+                        <td class="px-6 py-5 text-center text-[10px] text-ui-muted font-bold uppercase tracking-widest">${date}</td>
+                        <td class="px-6 py-5 text-right">
+                            <div class="flex justify-end gap-3">
+                                <button onclick="showQR('${url.short_code}')" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white">QR</button>
+                                <button onclick="copyToClipboard('${baseUrl}${url.short_code}', this)" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white">Copy</button>
+                                <a href="/urls/${url.short_code}/details" class="text-[10px] font-bold uppercase tracking-widest text-brand-500 hover:text-brand-400">Stats</a>
+                            </div>
+                        </td>
+                    `;
+                    body.appendChild(row);
+                }
             });
+            
+            if (totalClicksEl) totalClicksEl.innerText = totalClicks.toLocaleString();
+            if (qrScansEl) qrScansEl.innerText = totalQR.toLocaleString();
+            
         } catch (error) {
             console.error(error);
         }

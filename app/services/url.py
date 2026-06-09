@@ -1,4 +1,4 @@
-from sqlmodel import select
+from sqlmodel import select, update
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from models import URL, URLCreate
@@ -34,3 +34,17 @@ async def get_user_urls(user_id: int, session: AsyncSession) -> list[URL]:
     stmt = select(URL).where(URL.user_id == user_id)
     res = await session.execute(stmt)
     return list(res.scalars().all())
+
+
+async def increment_clicks(id: int, qr: bool, session: AsyncSession):
+    stmt = (
+        update(URL)
+        .where(URL.id == id)  # type: ignore
+        .values(
+            total_clicks=URL.total_clicks + 1,
+            qr_clicks=URL.qr_clicks + (1 if qr else 0),
+        )
+    )
+
+    await session.execute(stmt)
+    await session.commit()

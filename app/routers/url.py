@@ -37,11 +37,33 @@ async def get_my_urls(
 
 @router.get("/{short_code}")
 async def redirect_to_original_url(
-    short_code: str, session: AsyncSession = Depends(get_session)
+    short_code: str,
+    src: str | None = None,
+    session: AsyncSession = Depends(get_session),
 ) -> RedirectResponse:
     url = await url_service.get_url_by_code(short_code, session)
 
     if not url:
         raise HTTPException(status_code=404, detail="URL not found!")
 
+    assert url.id is not None
+
+    await url_service.increment_clicks(url.id, src == "qr", session)
+
     return RedirectResponse(str(url.long_url), 302)
+
+
+@router.get("/{short_code}/analytics")
+async def get_url_analytics(
+    short_code: str,
+    session: AsyncSession = Depends(get_session),
+    current_user: User | None = Depends(get_current_user),
+) -> URLRead:
+    url = await url_service.get_url_by_code(short_code, session)
+    if not url:
+        raise HTTPException(status_code=404, detail="URL not found!")
+
+    if url.user_id and (not current_user or current_user.id != url.user_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    return URLRead.model_validate(url)

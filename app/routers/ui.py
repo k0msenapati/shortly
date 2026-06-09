@@ -28,8 +28,6 @@ async def dashboard_page(request: Request):
 
 @router.get("/urls/{short_code}/details", response_class=HTMLResponse)
 async def url_details_page(request: Request, short_code: str):
-    # In a real app, we would fetch the URL data here
-    # For now, we'll pass the short_code and mock data via the template
     return templates.TemplateResponse(
         request=request, 
         name="url_details.html", 

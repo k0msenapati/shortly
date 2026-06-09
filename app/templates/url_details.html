@@ -1,98 +1,87 @@
 {% extends "base.html" %}
 
-{% block title %}Link Details | Shortly{% endblock %}
+{% block title %}Link Stats | Shortly{% endblock %}
 
 {% block head %}
 <style>
-    /* Hide landing page nav/footer */
     #main-nav, #main-footer { display: none !important; }
-    #main-container { padding-top: 4rem; }
+    #main-container { padding-top: 4rem; max-width: 1000px !important; }
+    .stat-value { @apply text-4xl font-bold tracking-tight text-white mb-1; }
+    .stat-label { @apply text-[10px] uppercase tracking-[0.2em] text-ui-muted font-black; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-12 pb-20">
-    <!-- Header -->
-    <div class="flex items-center justify-between pb-6 border-b border-ui-border">
-        <a href="/dashboard" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white flex items-center gap-2">
-            ← Back to Dashboard
+<div class="space-y-8 pb-20">
+    <!-- Top Bar -->
+    <div class="flex items-center justify-between">
+        <a href="/dashboard" class="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white">
+            <span class="text-lg">←</span> Back to Collection
         </a>
-        <div class="flex gap-4">
-            <button onclick="copyToClipboard('{{ short_url }}', this)" class="btn-outline text-[10px] uppercase tracking-widest">Copy Link</button>
-            <button onclick="alert('QR Download feature is coming soon!')" class="btn-green text-[10px] uppercase tracking-widest">Download QR</button>
+        <div class="flex items-center gap-3">
+             <button onclick="copyToClipboard('', this)" class="btn-outline text-[10px] uppercase tracking-widest px-6">Copy Link</button>
+             <button id="download-qr-btn" class="btn-green text-[10px] uppercase tracking-widest px-6">Download QR</button>
         </div>
     </div>
 
-    <!-- URL Header -->
-    <div class="space-y-4">
-        <div class="text-[10px] uppercase tracking-widest text-ui-muted font-bold">Short URL</div>
-        <div class="text-4xl font-serif font-bold text-brand-500">shortly.io/{{ short_code }}</div>
-        <div class="flex items-center gap-2 text-sm text-ui-muted">
-            <span>Destination:</span>
-            <a href="{{ long_url }}" target="_blank" class="text-white hover:underline truncate">{{ long_url }}</a>
-        </div>
-    </div>
-
-    <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="boxy-card p-6">
-            <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">Total Clicks</span>
-            <div class="text-3xl font-bold text-white">0</div>
-        </div>
-        <div class="boxy-card p-6 cursor-help" onclick="alert('QR Analytics is coming soon!')">
-            <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">QR Scans</span>
-            <div class="text-3xl font-bold text-white">0</div>
-        </div>
-        <div class="boxy-card p-6">
-            <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">Created</span>
-            <div class="text-3xl font-bold text-white">2026-06-09</div>
-        </div>
-    </div>
-
-    <!-- Chart Placeholder -->
-    <div class="boxy-card p-10">
-        <div class="flex items-center justify-between mb-8">
-            <h3 class="text-xs font-bold text-white uppercase tracking-widest">Click Trend</h3>
-            <span class="text-[10px] text-ui-muted uppercase font-bold">Last 7 Days</span>
-        </div>
-        <div class="h-48 flex items-end justify-between gap-2 border-b border-ui-border pb-2">
-            <!-- Empty bars for 0 data -->
-            <div class="w-full bg-ui-border" style="height: 2px"></div>
-            <div class="w-full bg-ui-border" style="height: 2px"></div>
-            <div class="w-full bg-ui-border" style="height: 2px"></div>
-            <div class="w-full bg-ui-border" style="height: 2px"></div>
-            <div class="w-full bg-ui-border" style="height: 2px"></div>
-            <div class="w-full bg-ui-border" style="height: 2px"></div>
-            <div class="w-full bg-brand-500/20" style="height: 2px"></div>
-        </div>
-        <div class="flex justify-between mt-4">
-            <span class="text-[10px] text-ui-muted uppercase font-bold">Mon</span>
-            <span class="text-[10px] text-ui-muted uppercase font-bold">Tue</span>
-            <span class="text-[10px] text-ui-muted uppercase font-bold">Wed</span>
-            <span class="text-[10px] text-ui-muted uppercase font-bold">Thu</span>
-            <span class="text-[10px] text-ui-muted uppercase font-bold">Fri</span>
-            <span class="text-[10px] text-ui-muted uppercase font-bold">Sat</span>
-            <span class="text-[10px] text-brand-500 uppercase font-bold">Today</span>
-        </div>
-    </div>
-
-    <!-- Traffic Sources -->
-    <div class="grid md:grid-cols-2 gap-6">
-        <div class="boxy-card">
-            <div class="p-4 border-b border-ui-border bg-ui-bg/50">
-                <h3 class="text-[10px] font-bold text-white uppercase tracking-widest">Traffic Sources</h3>
+    <!-- Hero Identity -->
+    <div class="boxy-card p-12 bg-gradient-to-br from-ui-card to-ui-bg">
+        <div class="max-w-2xl">
+            <h2 class="stat-label mb-4">Shortened Connection</h2>
+            <h1 class="text-5xl md:text-6xl font-serif font-bold text-brand-500 break-all" id="short-url-display">shortly.io/{{ short_code }}</h1>
+            <div class="mt-8 flex items-center gap-3 text-ui-muted">
+                <span class="text-[10px] uppercase font-black tracking-widest">Destination:</span>
+                <a href="{{ long_url }}" id="long-url-display" target="_blank" class="text-sm font-medium text-ui-text hover:text-brand-500 truncate border-b border-ui-border">{{ long_url }}</a>
             </div>
-            <div class="p-6 space-y-4 text-center py-10">
-                <p class="text-[10px] uppercase tracking-widest text-ui-muted font-bold">No data collected yet</p>
+        </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="boxy-card p-8 flex flex-col items-center text-center">
+            <div class="stat-value" id="total-clicks-display">0</div>
+            <div class="stat-label">Total Clicks</div>
+        </div>
+        <div class="boxy-card p-8 flex flex-col items-center text-center">
+            <div class="stat-value" id="direct-clicks-display">0</div>
+            <div class="stat-label">Direct Traffic</div>
+        </div>
+        <div class="boxy-card p-8 flex flex-col items-center text-center border-brand-500/20">
+            <div class="stat-value text-brand-500" id="qr-clicks-display">0</div>
+            <div class="stat-label">QR Scans</div>
+        </div>
+    </div>
+
+    <!-- Main Detail Area -->
+    <div class="grid md:grid-cols-2 gap-8">
+        <!-- QR Code Section -->
+        <div class="boxy-card overflow-hidden">
+            <div class="p-4 border-b border-ui-border bg-ui-bg/50 flex justify-between items-center">
+                <h3 class="text-[10px] font-bold text-white uppercase tracking-widest">Unique QR Code</h3>
+                <span class="text-[10px] text-ui-muted font-bold uppercase tracking-widest">Tracking Enabled</span>
+            </div>
+            <div class="p-12 bg-white flex flex-col items-center justify-center">
+                <div id="qrcode" class="p-4 border-4 border-black/5"></div>
             </div>
         </div>
 
-        <div class="boxy-card">
-            <div class="p-4 border-b border-ui-border bg-ui-bg/50">
-                <h3 class="text-[10px] font-bold text-white uppercase tracking-widest">Device Distribution</h3>
+        <!-- Meta Data Section -->
+        <div class="boxy-card p-10 flex flex-col justify-center space-y-8">
+            <div class="space-y-2">
+                <span class="stat-label">Connection Status</span>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-brand-500 rounded-full animate-pulse"></span>
+                    <span class="text-sm font-bold text-white uppercase tracking-widest">Active & Live</span>
+                </div>
             </div>
-            <div class="p-6 space-y-4 text-center py-10">
-                <p class="text-[10px] uppercase tracking-widest text-ui-muted font-bold">No data collected yet</p>
+
+            <div class="space-y-2">
+                <span class="stat-label">Created At</span>
+                <div class="text-lg font-bold text-white" id="created-at-display">June 09, 2026</div>
+            </div>
+
+            <div class="space-y-2 pt-6 border-t border-ui-border text-[10px] text-ui-muted leading-relaxed">
+                <p>QR code and direct link share the same destination but are tracked separately via the <code class="text-brand-500 bg-brand-500/10 px-1">src=qr</code> parameter.</p>
             </div>
         </div>
     </div>
@@ -101,11 +90,88 @@
 
 {% block scripts %}
 <script>
+    const shortCode = '{{ short_code }}';
+
+    async function loadUrlDetails() {
+        try {
+            const response = await fetchWithAuth(`/api/urls/${shortCode}/analytics`);
+            if (!response.ok) throw new Error('FAILED_TO_LOAD');
+            
+            const data = await response.json();
+            const fullUrl = window.location.origin + '/api/urls/' + data.short_code;
+            
+            const shortUrlDisplay = document.getElementById('short-url-display');
+            if (shortUrlDisplay) shortUrlDisplay.innerText = fullUrl.replace(/^https?:\/\//, '');
+            
+            const longUrlDisplay = document.getElementById('long-url-display');
+            if (longUrlDisplay) {
+                longUrlDisplay.innerText = data.long_url;
+                longUrlDisplay.href = data.long_url;
+            }
+            
+            const total = data.total_clicks || 0;
+            const qr = data.qr_clicks || 0;
+            const direct = total - qr;
+
+            const totalDisplay = document.getElementById('total-clicks-display');
+            if (totalDisplay) totalDisplay.innerText = total.toLocaleString();
+            
+            const qrDisplay = document.getElementById('qr-clicks-display');
+            if (qrDisplay) qrDisplay.innerText = qr.toLocaleString();
+            
+            const directDisplay = document.getElementById('direct-clicks-display');
+            if (directDisplay) directDisplay.innerText = direct.toLocaleString();
+            
+            const dateDisplay = document.getElementById('created-at-display');
+            if (dateDisplay) {
+                const date = new Date(data.created_at).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                dateDisplay.innerText = date;
+            }
+
+            // Generate QR Code
+            const qrContainer = document.getElementById("qrcode");
+            if (qrContainer) {
+                qrContainer.innerHTML = "";
+                new QRCode(qrContainer, {
+                    text: fullUrl + "?src=qr",
+                    width: 200,
+                    height: 200,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            }
+
+            // Download functionality
+            const downloadBtn = document.getElementById('download-qr-btn');
+            if (downloadBtn && qrContainer) {
+                downloadBtn.onclick = () => {
+                    const img = qrContainer.querySelector('img');
+                    if (!img) return;
+                    const link = document.createElement('a');
+                    link.download = `qr-${data.short_code}.png`;
+                    link.href = img.src;
+                    link.click();
+                };
+            }
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     function copyToClipboard(text, el) {
-        navigator.clipboard.writeText(text);
+        const fullUrl = window.location.origin + '/api/urls/' + shortCode;
+        navigator.clipboard.writeText(fullUrl);
         const original = el.innerText;
         el.innerText = 'COPIED';
         setTimeout(() => el.innerText = original, 2000);
     }
+
+    loadUrlDetails();
 </script>
 {% endblock %}
