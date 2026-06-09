@@ -8,7 +8,11 @@ from utils.shortener import generate_short_code
 async def create_url(
     url_create: URLCreate, session: AsyncSession, user_id: int | None = None
 ) -> URL:
-    url = URL(long_url=str(url_create.long_url), user_id=user_id)
+    url = URL(
+        long_url=str(url_create.long_url),
+        user_id=user_id,
+        expires_at=url_create.expires_at,
+    )
 
     session.add(url)
     await session.flush()

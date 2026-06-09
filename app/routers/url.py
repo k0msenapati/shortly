@@ -46,7 +46,10 @@ async def redirect_to_original_url(
     if not url:
         raise HTTPException(status_code=404, detail="URL not found!")
 
-    assert url.id is not None
+    url = URLRead.model_validate(url)
+    
+    if url.is_expired:
+        raise HTTPException(status_code=410, detail="This short link has expired!")
 
     await url_service.increment_clicks(url.id, src == "qr", session)
 

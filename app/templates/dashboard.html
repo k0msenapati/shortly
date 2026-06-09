@@ -60,6 +60,7 @@
                 <thead>
                     <tr class="bg-ui-bg">
                         <th class="px-6 py-4 text-[10px] uppercase tracking-widest text-ui-muted font-bold">Short URL</th>
+                        <th class="px-6 py-4 text-[10px] uppercase tracking-widest text-ui-muted font-bold text-center">Status</th>
                         <th class="px-6 py-4 text-[10px] uppercase tracking-widest text-ui-muted font-bold text-center">Clicks</th>
                         <th class="px-6 py-4 text-[10px] uppercase tracking-widest text-ui-muted font-bold text-center">QR</th>
                         <th class="px-6 py-4 text-[10px] uppercase tracking-widest text-ui-muted font-bold text-center">Created</th>
@@ -91,6 +92,12 @@
                 <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Custom Alias (optional)</label>
                 <input type="text" id="custom_alias" placeholder="my-custom-link" 
                     class="w-full">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Expiration Date (optional)</label>
+                <input type="datetime-local" id="expires_at" 
+                    class="w-full bg-ui-card border-ui-border focus:border-brand-500 text-white text-sm px-4 py-3 rounded outline-none transition-all">
             </div>
 
             <div id="modal-error" class="hidden text-rose-500 text-[10px] font-bold uppercase tracking-widest"></div>
@@ -165,6 +172,18 @@
                     row.className = 'hover:bg-ui-card/50';
                     const date = new Date(url.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                     
+                    const statusBadge = url.is_expired 
+                        ? `<span class="px-2 py-1 text-[8px] font-bold uppercase tracking-widest bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded">Expired</span>`
+                        : `<span class="px-2 py-1 text-[8px] font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded">Active</span>`;
+
+                    const qrBtn = url.is_expired
+                        ? `<button disabled class="text-[10px] font-bold uppercase tracking-widest text-ui-muted/30 cursor-not-allowed">QR</button>`
+                        : `<button onclick="showQR('${url.short_code}')" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white">QR</button>`;
+
+                    const copyBtn = url.is_expired
+                        ? `<button disabled class="text-[10px] font-bold uppercase tracking-widest text-ui-muted/30 cursor-not-allowed">Copy</button>`
+                        : `<button onclick="copyToClipboard('${baseUrl}${url.short_code}', this)" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white">Copy</button>`;
+
                     row.innerHTML = `
                         <td class="px-6 py-5">
                             <div class="flex flex-col gap-1">
@@ -172,13 +191,14 @@
                                 <span class="text-[10px] text-ui-muted truncate max-w-[200px]" title="${url.long_url}">${url.long_url}</span>
                             </div>
                         </td>
+                        <td class="px-6 py-5 text-center">${statusBadge}</td>
                         <td class="px-6 py-5 text-center text-sm font-bold text-white">${url.total_clicks || 0}</td>
                         <td class="px-6 py-5 text-center text-sm font-bold text-ui-muted">${url.qr_clicks || 0}</td>
                         <td class="px-6 py-5 text-center text-[10px] text-ui-muted font-bold uppercase tracking-widest">${date}</td>
                         <td class="px-6 py-5 text-right">
                             <div class="flex justify-end gap-3">
-                                <button onclick="showQR('${url.short_code}')" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white">QR</button>
-                                <button onclick="copyToClipboard('${baseUrl}${url.short_code}', this)" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white">Copy</button>
+                                ${qrBtn}
+                                ${copyBtn}
                                 <a href="/urls/${url.short_code}/details" class="text-[10px] font-bold uppercase tracking-widest text-brand-500 hover:text-brand-400">Stats</a>
                             </div>
                         </td>
@@ -206,6 +226,7 @@
     dashboardForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const longUrl = document.getElementById('long_url').value;
+        const expiresAt = document.getElementById('expires_at').value;
         const submitBtn = document.getElementById('submit-btn');
         const errorMsg = document.getElementById('modal-error');
         
@@ -214,9 +235,15 @@
         submitBtn.innerText = 'CREATING...';
 
         try {
+            const body = { long_url: longUrl };
+            if (expiresAt) {
+                // Convert local time to ISO string (UTC)
+                body.expires_at = new Date(expiresAt).toISOString();
+            }
+
             const response = await fetchWithAuth('/api/urls/shorten', {
                 method: 'POST',
-                body: JSON.stringify({ long_url: longUrl })
+                body: JSON.stringify(body)
             });
 
             const data = await response.json();

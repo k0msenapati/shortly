@@ -132,6 +132,36 @@
                 dateDisplay.innerText = date;
             }
 
+            // Update Status if expired
+            if (data.is_expired) {
+                const copyBtn = document.querySelector('button[onclick^="copyToClipboard"]');
+                if (copyBtn) {
+                    copyBtn.disabled = true;
+                    copyBtn.classList.add('cursor-not-allowed', 'opacity-50');
+                    copyBtn.onclick = null;
+                }
+
+                const downloadBtn = document.getElementById('download-qr-btn');
+                if (downloadBtn) {
+                    downloadBtn.disabled = true;
+                    downloadBtn.classList.add('cursor-not-allowed', 'opacity-50');
+                    downloadBtn.onclick = null;
+                }
+
+                const statusDot = document.querySelector('.w-2.h-2.bg-brand-500');
+                if (statusDot) {
+                    statusDot.classList.remove('bg-brand-500', 'animate-pulse');
+                    statusDot.classList.add('bg-rose-500');
+                }
+
+                const statusText = document.querySelector('.text-sm.font-bold.text-white.uppercase.tracking-widest');
+                if (statusText) {
+                    statusText.innerText = 'Expired & Inactive';
+                    statusText.classList.remove('text-white');
+                    statusText.classList.add('text-rose-500');
+                }
+            }
+
             // Generate QR Code
             const qrContainer = document.getElementById("qrcode");
             if (qrContainer) {
@@ -144,6 +174,15 @@
                     colorLight : "#ffffff",
                     correctLevel : QRCode.CorrectLevel.H
                 });
+
+                if (data.is_expired) {
+                    qrContainer.classList.add('grayscale', 'opacity-20');
+                    const expiredOverlay = document.createElement('div');
+                    expiredOverlay.className = 'absolute inset-0 flex items-center justify-center pointer-events-none';
+                    expiredOverlay.innerHTML = '<span class="text-rose-500 font-bold uppercase tracking-widest text-sm border-2 border-rose-500 px-4 py-2 rotate-12">Expired</span>';
+                    qrContainer.parentElement.classList.add('relative');
+                    qrContainer.parentElement.appendChild(expiredOverlay);
+                }
             }
 
             // Download functionality

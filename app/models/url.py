@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import SQLModel, Field, Relationship
-from pydantic import HttpUrl
+from pydantic import HttpUrl, computed_field
 from datetime import datetime, timezone
 
 if TYPE_CHECKING:
@@ -21,6 +21,7 @@ class URL(SQLModel, table=True):
     )
     total_clicks: int = Field(default=0)
     qr_clicks: int = Field(default=0)
+    expires_at: datetime | None = Field(default=None)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         nullable=False,
@@ -38,6 +39,7 @@ class URL(SQLModel, table=True):
 
 class URLCreate(SQLModel):
     long_url: HttpUrl
+    expires_at: datetime | None = None
 
 
 # Response Schemas
@@ -49,4 +51,13 @@ class URLRead(SQLModel):
     short_code: str
     total_clicks: int
     qr_clicks: int
+    expires_at: datetime | None
     created_at: datetime
+
+    @computed_field
+    @property
+    def is_expired(self) -> bool:
+        if not self.expires_at:
+            return False
+
+        return datetime.now(timezone.utc) > self.expires_at.astimezone(timezone.utc)
