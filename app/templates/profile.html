@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Profile | Shortly{% endblock %}
+
+{% block head %}
+<style>
+    /* Hide landing page nav/footer */
+    #main-nav, #main-footer { display: none !important; }
+    #main-container { padding-top: 4rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-12 pb-20">
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-6 border-b border-ui-border">
+        <div class="flex items-center gap-8">
+            <h1 class="text-3xl font-serif font-bold text-white">Profile</h1>
+            <nav class="hidden md:flex items-center gap-6">
+                <a href="/dashboard" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Links</a>
+                <a href="javascript:void(0)" onclick="alert('Analytics feature is coming soon!')" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Analytics</a>
+                <a href="javascript:void(0)" onclick="alert('Settings feature is coming soon!')" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Settings</a>
+                <a href="/profile" class="text-xs font-bold uppercase tracking-widest text-brand-500">Profile</a>
+            </nav>
+        </div>
+        <button id="profile-logout-btn" class="text-xs font-bold uppercase tracking-widest text-rose-500 hover:text-rose-400">Logout</button>
+    </div>
+
+    <div class="boxy-card p-10 flex flex-col md:flex-row gap-12 items-center md:items-start bg-ui-card">
+        <div class="w-32 h-32 flex-shrink-0 bg-ui-bg boxy-border flex items-center justify-center">
+            <span id="user-initial" class="text-5xl font-serif font-bold text-brand-500">U</span>
+        </div>
+        
+        <div class="flex-grow space-y-8 text-center md:text-left">
+            <div>
+                <h3 id="profile-username-display" class="text-3xl font-serif font-bold text-white mb-2">User Name</h3>
+                <p id="profile-email-display" class="text-ui-muted font-bold text-xs uppercase tracking-widest">email@example.com</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-4 justify-center md:justify-start pt-4 border-t border-ui-border">
+                <button onclick="openEditModal()" class="btn-outline text-[10px] uppercase tracking-widest">
+                    Edit Profile
+                </button>
+                <button id="profile-session-logout" class="text-[10px] font-bold uppercase tracking-widest text-rose-500 border border-rose-500/20 px-4 py-2 hover:bg-rose-500/5">
+                    Terminate Session
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="edit-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-ui-bg/90 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
+    <div class="relative boxy-card w-full max-w-md p-10 bg-ui-card">
+        <h2 class="text-2xl font-serif font-bold text-white mb-8 pb-4 border-b border-ui-border">Edit Profile</h2>
+        
+        <form id="edit-profile-form" class="space-y-6">
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Full Name</label>
+                <input type="text" id="edit-full-name" placeholder="Alex Refined" class="w-full">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Username</label>
+                <input type="text" id="edit-username" placeholder="alex_refined" required class="w-full">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Email Address</label>
+                <input type="email" id="edit-email" placeholder="name@domain.com" required class="w-full">
+            </div>
+
+            <div id="edit-error" class="hidden text-rose-500 text-[10px] font-bold uppercase tracking-widest"></div>
+            
+            <div class="flex gap-4 pt-6">
+                <button type="button" onclick="document.getElementById('edit-modal').classList.add('hidden')" class="btn-outline flex-grow text-[10px] uppercase tracking-widest">Cancel</button>
+                <button type="submit" id="save-btn" class="btn-green flex-[2] text-[10px] uppercase tracking-widest">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentUser = null;
+
+    async function loadProfile() {
+        try {
+            const response = await fetchWithAuth('/api/users/me');
+            if (!response.ok) throw new Error('Failed to fetch profile');
+            
+            currentUser = await response.json();
+            updateUIDisplay(currentUser);
+        } catch (error) {
+            console.error(error);
+            document.getElementById('profile-username-display').innerText = 'User';
+        }
+    }
+
+    function updateUIDisplay(user) {
+        document.getElementById('profile-username-display').innerText = user.full_name || user.user_name || 'User';
+        document.getElementById('profile-email-display').innerText = user.email;
+        const nameForInitial = user.full_name || user.user_name || 'U';
+        document.getElementById('user-initial').innerText = nameForInitial.charAt(0).toUpperCase();
+        
+        const date = new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        document.getElementById('joined-date').innerText = date;
+    }
+
+    function openEditModal() {
+        if (!currentUser) return;
+        document.getElementById('edit-full-name').value = currentUser.full_name || '';
+        document.getElementById('edit-username').value = currentUser.user_name;
+        document.getElementById('edit-email').value = currentUser.email;
+        document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    document.getElementById('edit-profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const full_name = document.getElementById('edit-full-name').value;
+        const user_name = document.getElementById('edit-username').value;
+        const email = document.getElementById('edit-email').value;
+        const saveBtn = document.getElementById('save-btn');
+        const errorMsg = document.getElementById('edit-error');
+
+        errorMsg.classList.add('hidden');
+        saveBtn.innerText = 'SAVING...';
+        saveBtn.disabled = true;
+
+        try {
+            const response = await fetchWithAuth('/api/users/me', {
+                method: 'PATCH',
+                body: JSON.stringify({ full_name, user_name, email })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'UPDATE_FAILED');
+
+            currentUser = data;
+            updateUIDisplay(currentUser);
+            document.getElementById('edit-modal').classList.add('hidden');
+        } catch (error) {
+            errorMsg.innerText = 'ERROR: ' + (typeof error.message === 'string' ? error.message : 'UNABLE TO UPDATE');
+            errorMsg.classList.remove('hidden');
+        } finally {
+            saveBtn.innerText = 'SAVE CHANGES';
+            saveBtn.disabled = false;
+        }
+    });
+
+    const logoutAction = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+    };
+
+    document.getElementById('profile-logout-btn')?.addEventListener('click', logoutAction);
+    document.getElementById('profile-session-logout')?.addEventListener('click', logoutAction);
+
+    loadProfile();
+</script>
+{% endblock %}

@@ -31,6 +31,7 @@ async def update_me(
             detail="Not authenticated",
         )
 
+    assert current_user.id is not None
     user = await user_service.update_user(current_user.id, user_update, session)
     return UserRead.model_validate(user)
 

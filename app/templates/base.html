@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Shortly | Link Management{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Fraunces:wght@700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#16a34a',
+                            600: '#15803d',
+                        },
+                        ui: {
+                            bg: '#0a0a0a',
+                            card: '#141414',
+                            border: '#262626',
+                            text: '#e5e5e5',
+                            muted: '#737373',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        serif: ['Fraunces', 'serif'],
+                    },
+                    borderRadius: {
+                        'none': '0',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-ui-bg text-ui-text font-sans antialiased;
+            }
+        }
+        .boxy-border { @apply border border-ui-border rounded-none; }
+        .boxy-card { @apply bg-ui-card boxy-border shadow-none; }
+        .btn-green { @apply bg-brand-500 hover:bg-brand-600 text-white px-6 py-2 rounded-none font-bold; }
+        .btn-outline { @apply border border-ui-border text-ui-muted hover:text-white hover:border-ui-muted rounded-none px-4 py-2 font-bold; }
+        
+        /* No animations */
+        * { transition: none !important; transform: none !important; animation: none !important; }
+        
+        input, select, textarea {
+            @apply bg-ui-bg border border-ui-border rounded-none text-ui-text px-4 py-2 outline-none focus:border-brand-500;
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen">
+    
+    <div id="main-container" class="max-w-6xl mx-auto px-4 sm:px-6">
+        <nav id="main-nav" class="flex items-center justify-between py-6 border-b border-ui-border mb-12">
+            <a href="/" class="text-xl font-serif font-bold tracking-tight text-brand-500">
+                SHORTLY
+            </a>
+            
+            <div class="flex items-center gap-6" id="nav-links">
+                <div id="auth-links" class="flex items-center gap-6">
+                    <a href="/login" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Login</a>
+                    <a href="/register" class="btn-green text-xs uppercase tracking-widest">Join</a>
+                </div>
+                <div id="user-links" class="hidden flex items-center gap-6">
+                    <a href="/dashboard" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Dashboard</a>
+                    <button id="logout-btn" class="text-xs font-bold uppercase tracking-widest text-rose-500 hover:text-rose-400">Exit</button>
+                </div>
+            </div>
+        </nav>
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer id="main-footer" class="mt-32 py-12 border-t border-ui-border text-center">
+            <p class="text-[10px] uppercase tracking-[0.3em] text-ui-muted font-bold">
+                &copy; 2026 Shortly. Professional Utility.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const path = window.location.pathname;
+            
+            if (token) {
+                if (['/', '/login', '/register'].includes(path)) {
+                    window.location.href = '/dashboard';
+                    return;
+                }
+            } else {
+                const protectedPaths = ['/dashboard', '/profile'];
+                if (protectedPaths.includes(path)) {
+                    window.location.href = '/';
+                    return;
+                }
+            }
+
+            const authLinks = document.getElementById('auth-links');
+            const userLinks = document.getElementById('user-links');
+            
+            if (token) {
+                authLinks?.classList.add('hidden');
+                userLinks?.classList.remove('hidden');
+                userLinks?.classList.add('flex');
+            } else {
+                authLinks?.classList.remove('hidden');
+                authLinks?.classList.add('flex');
+                userLinks?.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('logout-btn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        });
+
+        checkAuth();
+        
+        async function fetchWithAuth(url, options = {}) {
+            const token = localStorage.getItem('token');
+            const headers = { 'Content-Type': 'application/json', ...options.headers };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            const response = await fetch(url, { ...options, headers });
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                if (!['/', '/login', '/register'].includes(window.location.pathname)) {
+                    window.location.href = '/';
+                }
+            }
+            return response;
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

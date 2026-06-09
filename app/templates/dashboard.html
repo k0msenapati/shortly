@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Shortly{% endblock %}
+
+{% block head %}
+<style>
+    /* Hide landing page nav/footer on dashboard */
+    #main-nav, #main-footer { display: none !important; }
+    #main-container { padding-top: 4rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-12 pb-20">
+    <!-- Sub Nav / Actions -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-6 border-b border-ui-border">
+        <div class="flex items-center gap-8">
+            <h1 class="text-3xl font-serif font-bold text-white">Dashboard</h1>
+            <nav class="hidden md:flex items-center gap-6">
+                <a href="/dashboard" class="text-xs font-bold uppercase tracking-widest text-brand-500">Links</a>
+                <a href="javascript:void(0)" onclick="alert('Analytics feature is coming soon!')" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Analytics</a>
+                <a href="javascript:void(0)" onclick="alert('Settings feature is coming soon!')" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Settings</a>
+                <a href="/profile" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Profile</a>
+            </nav>
+        </div>
+        <div class="flex items-center gap-4">
+            <button id="dashboard-logout-btn" class="text-xs font-bold uppercase tracking-widest text-rose-500 hover:text-rose-400 mr-4">Logout</button>
+            <button onclick="document.getElementById('create-modal').classList.remove('hidden')" class="btn-green text-xs uppercase tracking-widest">
+                + New Link
+            </button>
+        </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="boxy-card p-6">
+            <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">Active</span>
+            <div class="text-3xl font-bold text-brand-500">0</div>
+        </div>
+        <div class="boxy-card p-6">
+            <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">Total Links</span>
+            <div class="text-3xl font-bold text-white" id="total-links">0</div>
+        </div>
+        <div class="boxy-card p-6">
+            <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">Total Clicks</span>
+            <div class="text-3xl font-bold text-white" id="total-clicks">0</div>
+        </div>
+        <div class="boxy-card p-6 cursor-help" onclick="alert('QR Tracking is currently in development.')">
+            <span class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block mb-2">QR Scans</span>
+            <div class="text-3xl font-bold text-white">0</div>
+        </div>
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="flex gap-4">
+        <input type="text" placeholder="Search links..." class="flex-grow bg-ui-card border-ui-border focus:border-brand-500 placeholder:text-ui-muted text-sm">
+    </div>
+
+    <!-- Links Table -->
+    <div class="boxy-card overflow-hidden">
+        <div class="p-4 border-b border-ui-border bg-ui-bg/50">
+            <h3 class="text-[10px] font-bold text-white uppercase tracking-widest">Your Links</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-ui-bg">
+                        <th class="px-6 py-4 text-[10px] uppercase tracking-widest text-ui-muted font-bold">Short URL</th>
+                        <th class="px-6 py-4 text-[10px] uppercase tracking-widest text-ui-muted font-bold text-center">Clicks</th>
+                        <th class="px-6 py-4 text-[10px] uppercase tracking-widest text-ui-muted font-bold text-center">QR</th>
+                        <th class="px-6 py-4 text-[10px] uppercase tracking-widest text-ui-muted font-bold text-center">Created</th>
+                        <th class="px-6 py-4 text-[10px] uppercase tracking-widest text-ui-muted font-bold text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="urls-body" class="divide-y divide-ui-border">
+                    <!-- Dynamic Content -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Modal -->
+<div id="create-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-ui-bg/90 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
+    <div class="relative boxy-card w-full max-w-md p-10 bg-ui-card">
+        <h2 class="text-2xl font-serif font-bold text-white mb-8 pb-4 border-b border-ui-border">Create Short Link</h2>
+        
+        <form id="dashboard-shorten-form" class="space-y-6">
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Original URL</label>
+                <input type="url" id="long_url" placeholder="https://..." required 
+                    class="w-full">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Custom Alias (optional)</label>
+                <input type="text" id="custom_alias" placeholder="my-custom-link" 
+                    class="w-full">
+            </div>
+
+            <label class="flex items-center gap-3 cursor-pointer" onclick="alert('QR Code generation will be available in the next update!')">
+                <input type="checkbox" id="qr_code" disabled class="w-4 h-4 bg-ui-bg border-ui-border text-brand-500 rounded-none focus:ring-0 opacity-50">
+                <span class="text-xs font-bold uppercase tracking-widest text-ui-muted">Generate QR Code (Coming Soon)</span>
+            </label>
+
+            <div id="modal-error" class="hidden text-rose-500 text-[10px] font-bold uppercase tracking-widest"></div>
+            
+            <div class="flex gap-4 pt-6">
+                <button type="button" onclick="document.getElementById('create-modal').classList.add('hidden')" class="btn-outline flex-grow text-[10px] uppercase tracking-widest">Cancel</button>
+                <button type="submit" id="submit-btn" class="btn-green flex-[2] text-[10px] uppercase tracking-widest">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function loadDashboard() {
+        try {
+            const response = await fetchWithAuth('/api/urls/');
+            if (!response.ok) throw new Error('FETCH_FAILED');
+            
+            const urls = await response.json();
+            const body = document.getElementById('urls-body');
+            const totalLinksEl = document.getElementById('total-links');
+            
+            totalLinksEl.innerText = urls.length;
+            
+            if (urls.length === 0) {
+                body.innerHTML = `<tr><td colspan="5" class="px-6 py-20 text-center text-ui-muted text-[10px] uppercase tracking-[0.2em] font-bold">No links created yet</td></tr>`;
+                return;
+            }
+
+            body.innerHTML = '';
+            const baseUrl = window.location.origin + '/api/urls/';
+            
+            urls.forEach(url => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-ui-card/50';
+                const date = new Date(url.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                row.innerHTML = `
+                    <td class="px-6 py-5">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-brand-500 font-bold text-sm tracking-tight">/${url.short_code}</span>
+                            <span class="text-[10px] text-ui-muted truncate max-w-[200px]" title="${url.long_url}">${url.long_url}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-5 text-center text-sm font-bold text-white">0</td>
+                    <td class="px-6 py-5 text-center text-sm font-bold text-ui-muted">0</td>
+                    <td class="px-6 py-5 text-center text-[10px] text-ui-muted font-bold uppercase tracking-widest">${date}</td>
+                    <td class="px-6 py-5 text-right">
+                        <div class="flex justify-end gap-3">
+                            <button onclick="copyToClipboard('${baseUrl}${url.short_code}', this)" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white">Copy</button>
+                            <a href="/urls/${url.short_code}/details" class="text-[10px] font-bold uppercase tracking-widest text-brand-500 hover:text-brand-400">Stats</a>
+                        </div>
+                    </td>
+                `;
+                body.appendChild(row);
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function copyToClipboard(text, el) {
+        navigator.clipboard.writeText(text);
+        const original = el.innerText;
+        el.innerText = 'COPIED';
+        setTimeout(() => el.innerText = original, 2000);
+    }
+
+    const dashboardForm = document.getElementById('dashboard-shorten-form');
+    dashboardForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const longUrl = document.getElementById('long_url').value;
+        const submitBtn = document.getElementById('submit-btn');
+        const errorMsg = document.getElementById('modal-error');
+        
+        errorMsg.classList.add('hidden');
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'CREATING...';
+
+        try {
+            const response = await fetchWithAuth('/api/urls/shorten', {
+                method: 'POST',
+                body: JSON.stringify({ long_url: longUrl })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error('FAILED');
+
+            document.getElementById('create-modal').classList.add('hidden');
+            dashboardForm.reset();
+            loadDashboard();
+        } catch (error) {
+            errorMsg.innerText = 'ERROR: UNABLE TO CREATE';
+            errorMsg.classList.remove('hidden');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'CREATE';
+        }
+    });
+
+    document.getElementById('dashboard-logout-btn')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+    });
+
+    loadDashboard();
+</script>
+{% endblock %}

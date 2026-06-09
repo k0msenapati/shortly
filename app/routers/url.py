@@ -30,6 +30,7 @@ async def get_my_urls(
             status_code=401,
             detail="Not authenticated",
         )
+    assert current_user.id is not None
     urls = await url_service.get_user_urls(current_user.id, session)
     return [URLRead.model_validate(url) for url in urls]
 

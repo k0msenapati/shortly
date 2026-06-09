@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Join | Shortly{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto pt-16">
+    <div class="boxy-card p-10">
+        <h1 class="text-3xl font-serif font-bold text-white mb-2">Join Shortly</h1>
+        <p class="text-[10px] uppercase tracking-widest text-ui-muted font-bold mb-10 pb-4 border-b border-ui-border">Start refining your connections</p>
+        
+        <div id="register-error" class="hidden mb-6 p-4 border border-rose-500/20 text-rose-500 text-[10px] uppercase font-bold tracking-widest text-center"></div>
+        
+        <form id="register-form" class="space-y-5">
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Full Name</label>
+                <input type="text" id="full_name" placeholder="Alex Refined" required class="w-full">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Username</label>
+                <input type="text" id="username" placeholder="alex_refined" required class="w-full">
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Email Address</label>
+                <input type="email" id="email" placeholder="name@domain.com" required class="w-full">
+            </div>
+            
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">Password</label>
+                <input type="password" id="password" placeholder="••••••••" required class="w-full">
+            </div>
+            
+            <button type="submit" id="register-btn" class="btn-green w-full py-4 text-[10px] uppercase tracking-[0.2em] font-black mt-4">
+                Create Account
+            </button>
+        </form>
+        
+        <div class="mt-10 pt-6 border-t border-ui-border text-center">
+            <p class="text-xs text-ui-muted font-medium uppercase tracking-widest">
+                Have an account? <a href="/login" class="text-brand-500 hover:underline ml-1">Sign In</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const full_name = document.getElementById('full_name').value;
+        const user_name = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('register-error');
+        const registerBtn = document.getElementById('register-btn');
+
+        errorMsg.classList.add('hidden');
+        registerBtn.innerText = 'CREATING...';
+        registerBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ full_name, user_name, email, password })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'REGISTRATION_FAILED');
+
+            window.location.href = '/login?registered=true';
+        } catch (error) {
+            errorMsg.innerText = 'ERROR: UNABLE TO REGISTER';
+            errorMsg.classList.remove('hidden');
+        } finally {
+            registerBtn.innerText = 'CREATE ACCOUNT';
+            registerBtn.disabled = false;
+        }
+    });
+</script>
+{% endblock %}
