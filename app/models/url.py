@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import DateTime
 from pydantic import HttpUrl, computed_field
 from datetime import datetime, timezone
 
@@ -21,9 +22,13 @@ class URL(SQLModel, table=True):
     )
     total_clicks: int = Field(default=0)
     qr_clicks: int = Field(default=0)
-    expires_at: datetime | None = Field(default=None)
+    expires_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True), # type: ignore
+    )
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
+        sa_type=DateTime(timezone=True),  # type: ignore
         nullable=False,
     )
 
@@ -44,7 +49,6 @@ class URLCreate(SQLModel):
 
 class URLReactivate(SQLModel):
     expires_at: datetime | None = None
-
 
 
 # Response Schemas

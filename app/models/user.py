@@ -1,6 +1,7 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List
 
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import DateTime
 from pydantic import EmailStr
 from datetime import datetime, timezone
 
@@ -18,6 +19,7 @@ class User(SQLModel, table=True):
 
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
+        sa_type=DateTime(timezone=True),  # type: ignore
         nullable=False,
     )
 
