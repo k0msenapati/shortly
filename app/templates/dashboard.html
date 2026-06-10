@@ -47,7 +47,7 @@
 
     <!-- Search & Filters -->
     <div class="flex gap-4">
-        <input type="text" placeholder="Search links..." class="flex-grow bg-ui-card border-ui-border focus:border-brand-500 placeholder:text-ui-muted text-sm">
+        <input type="text" id="search-input" placeholder="Search links..." class="flex-grow bg-ui-card border-ui-border focus:border-brand-500 placeholder:text-ui-muted text-sm">
     </div>
 
     <!-- Links Table -->
@@ -137,9 +137,10 @@
         document.getElementById('qr-modal').classList.remove('hidden');
     }
 
-    async function loadDashboard() {
+    async function loadDashboard(searchQuery = '') {
         try {
-            const response = await fetchWithAuth('/api/urls/');
+            const url = searchQuery ? `/api/urls/search?q=${encodeURIComponent(searchQuery)}` : '/api/urls/';
+            const response = await fetchWithAuth(url);
             if (!response.ok) throw new Error('FETCH_FAILED');
             
             const urls = await response.json();
@@ -148,15 +149,23 @@
             const totalClicksEl = document.getElementById('total-clicks');
             const qrScansEl = document.getElementById('qr-scans');
             
-            if (totalLinksEl) totalLinksEl.innerText = urls.length;
-            
-            let totalClicks = 0;
-            let totalQR = 0;
+            if (!searchQuery) {
+                if (totalLinksEl) totalLinksEl.innerText = urls.length;
+                
+                let totalClicks = 0;
+                let totalQR = 0;
+                urls.forEach(url => {
+                    totalClicks += url.total_clicks || 0;
+                    totalQR += url.qr_clicks || 0;
+                });
+                
+                if (totalClicksEl) totalClicksEl.innerText = totalClicks.toLocaleString();
+                if (qrScansEl) qrScansEl.innerText = totalQR.toLocaleString();
+            }
             
             if (urls.length === 0) {
-                if (body) body.innerHTML = `<tr><td colspan="5" class="px-6 py-20 text-center text-ui-muted text-[10px] uppercase tracking-[0.2em] font-bold">No links created yet</td></tr>`;
-                if (totalClicksEl) totalClicksEl.innerText = '0';
-                if (qrScansEl) qrScansEl.innerText = '0';
+                const message = searchQuery ? "No matching links found" : "No links created yet";
+                if (body) body.innerHTML = `<tr><td colspan="6" class="px-6 py-20 text-center text-ui-muted text-[10px] uppercase tracking-[0.2em] font-bold">${message}</td></tr>`;
                 return;
             }
 
@@ -164,9 +173,6 @@
             const baseUrl = window.location.origin + '/api/urls/';
             
             urls.forEach(url => {
-                totalClicks += url.total_clicks || 0;
-                totalQR += url.qr_clicks || 0;
-                
                 if (body) {
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-ui-card/50';
@@ -206,9 +212,6 @@
                     body.appendChild(row);
                 }
             });
-            
-            if (totalClicksEl) totalClicksEl.innerText = totalClicks.toLocaleString();
-            if (qrScansEl) qrScansEl.innerText = totalQR.toLocaleString();
             
         } catch (error) {
             console.error(error);
@@ -265,6 +268,15 @@
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/';
+    });
+
+    const searchInput = document.getElementById('search-input');
+    let searchTimeout;
+    searchInput?.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            loadDashboard(e.target.value);
+        }, 300);
     });
 
     loadDashboard();

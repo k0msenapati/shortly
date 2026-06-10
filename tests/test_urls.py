@@ -55,3 +55,51 @@ async def test_redirect_not_found(client: AsyncClient):
 async def test_get_my_urls_unauthorized(client: AsyncClient):
     response = await client.get("/api/urls/")
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_search_urls_unauthorized(client: AsyncClient):
+    response = await client.get("/api/urls/search?q=test")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_search_urls_success(client: AsyncClient, auth_headers: dict):
+    # 1. Create a few urls
+    await client.post(
+        "/api/urls/shorten",
+        json={"long_url": "https://github.com/fastapi/fastapi"},
+        headers=auth_headers,
+    )
+    await client.post(
+        "/api/urls/shorten",
+        json={"long_url": "https://google.com"},
+        headers=auth_headers,
+    )
+    await client.post(
+        "/api/urls/shorten",
+        json={"long_url": "https://github.com/tiangolo/sqlmodel"},
+        headers=auth_headers,
+    )
+
+    # 2. Search for "github"
+    res1 = await client.get("/api/urls/search?q=github", headers=auth_headers)
+    assert res1.status_code == 200
+    urls1 = res1.json()
+    assert len(urls1) == 2
+    assert all("github" in url["long_url"] for url in urls1)
+
+    # 3. Search for "google"
+    res2 = await client.get("/api/urls/search?q=google", headers=auth_headers)
+    assert res2.status_code == 200
+    urls2 = res2.json()
+    assert len(urls2) == 1
+    assert urls2[0]["long_url"] == "https://google.com/"
+
+    # 4. Search with empty query
+    res3 = await client.get("/api/urls/search", headers=auth_headers)
+    assert res3.status_code == 200
+    urls3 = res3.json()
+    # At least 3 urls should exist in total
+    assert len(urls3) >= 3
+

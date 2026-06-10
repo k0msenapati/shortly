@@ -35,6 +35,20 @@ async def get_my_urls(
     return [URLRead.model_validate(url) for url in urls]
 
 
+@router.get("/search")
+async def search_urls(
+    q: str = "",
+    session: AsyncSession = Depends(get_session),
+    current_user: User | None = Depends(get_current_user),
+) -> list[URLRead]:
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    assert current_user.id is not None
+
+    urls = await url_service.search_user_urls_by_long_url(current_user.id, q, session)
+    return [URLRead.model_validate(url) for url in urls]
+
+
 @router.get("/{short_code}")
 async def redirect_to_original_url(
     short_code: str,
@@ -47,7 +61,7 @@ async def redirect_to_original_url(
         raise HTTPException(status_code=404, detail="URL not found!")
 
     url = URLRead.model_validate(url)
-    
+
     if url.is_expired:
         raise HTTPException(status_code=410, detail="This short link has expired!")
 

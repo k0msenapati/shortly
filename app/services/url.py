@@ -52,3 +52,11 @@ async def increment_clicks(id: int, qr: bool, session: AsyncSession):
 
     await session.execute(stmt)
     await session.commit()
+
+
+async def search_user_urls_by_long_url(
+    user_id: int, query: str, session: AsyncSession
+) -> list[URL]:
+    stmt = select(URL).where(URL.user_id == user_id).where(URL.long_url.contains(query))  # type: ignore
+    res = await session.execute(stmt)
+    return list(res.scalars().all())
