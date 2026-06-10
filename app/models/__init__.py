@@ -1,5 +1,5 @@
 from .user import User, UserCreate, UserRead, UserUpdate, UserLogin, Token
-from .url import URL, URLCreate, URLRead
+from .url import URL, URLCreate, URLRead, URLReactivate
 
 __all__ = [
     "User",
@@ -11,4 +11,5 @@ __all__ = [
     "URL",
     "URLCreate",
     "URLRead",
+    "URLReactivate",
 ]

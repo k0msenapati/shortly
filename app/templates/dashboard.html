@@ -110,6 +110,31 @@
     </div>
 </div>
 
+<!-- Reactivate Modal -->
+<div id="reactivate-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-ui-bg/90 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
+    <div class="relative boxy-card w-full max-w-md p-10 bg-ui-card">
+        <h2 class="text-2xl font-serif font-bold text-white mb-8 pb-4 border-b border-ui-border">Reactivate Link</h2>
+        
+        <form id="dashboard-reactivate-form" class="space-y-6">
+            <input type="hidden" id="reactivate-short-code">
+            <div class="space-y-2">
+                <label class="text-[10px] uppercase tracking-widest text-ui-muted font-bold block">New Expiration Date (optional)</label>
+                <input type="datetime-local" id="reactivate-expires-at" 
+                    class="w-full bg-ui-card border-ui-border focus:border-brand-500 text-white text-sm px-4 py-3 rounded outline-none transition-all">
+                <span class="text-[9px] text-ui-muted block mt-1">Leave empty to activate indefinitely.</span>
+            </div>
+
+            <div id="reactivate-modal-error" class="hidden text-rose-500 text-[10px] font-bold uppercase tracking-widest"></div>
+            
+            <div class="flex gap-4 pt-6">
+                <button type="button" onclick="document.getElementById('reactivate-modal').classList.add('hidden')" class="btn-outline flex-grow text-[10px] uppercase tracking-widest">Cancel</button>
+                <button type="submit" id="reactivate-submit-btn" class="btn-green flex-[2] text-[10px] uppercase tracking-widest">Reactivate</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- QR Viewer Modal -->
 <div id="qr-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-ui-bg/90 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
@@ -190,6 +215,10 @@
                         ? `<button disabled class="text-[10px] font-bold uppercase tracking-widest text-ui-muted/30 cursor-not-allowed">Copy</button>`
                         : `<button onclick="copyToClipboard('${baseUrl}${url.short_code}', this)" class="text-[10px] font-bold uppercase tracking-widest text-ui-muted hover:text-white">Copy</button>`;
 
+                    const reactivateBtn = url.is_expired
+                        ? `<button onclick="reactivateUrl('${url.short_code}')" class="text-[10px] font-bold uppercase tracking-widest text-emerald-500 hover:text-emerald-400">Reactivate</button>`
+                        : '';
+
                     row.innerHTML = `
                         <td class="px-6 py-5">
                             <div class="flex flex-col gap-1">
@@ -203,6 +232,7 @@
                         <td class="px-6 py-5 text-center text-[10px] text-ui-muted font-bold uppercase tracking-widest">${date}</td>
                         <td class="px-6 py-5 text-right">
                             <div class="flex justify-end gap-3">
+                                ${reactivateBtn}
                                 ${qrBtn}
                                 ${copyBtn}
                                 <a href="/urls/${url.short_code}/details" class="text-[10px] font-bold uppercase tracking-widest text-brand-500 hover:text-brand-400">Stats</a>
@@ -268,6 +298,57 @@
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/';
+    });
+
+    function reactivateUrl(shortCode) {
+        document.getElementById('reactivate-short-code').value = shortCode;
+        document.getElementById('reactivate-expires-at').value = '';
+        document.getElementById('reactivate-modal-error').classList.add('hidden');
+        document.getElementById('reactivate-modal').classList.remove('hidden');
+    }
+
+    const reactivateForm = document.getElementById('dashboard-reactivate-form');
+    reactivateForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const shortCode = document.getElementById('reactivate-short-code').value;
+        const expiresAt = document.getElementById('reactivate-expires-at').value;
+        const submitBtn = document.getElementById('reactivate-submit-btn');
+        const errorMsg = document.getElementById('reactivate-modal-error');
+        
+        errorMsg.classList.add('hidden');
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'REACTIVATING...';
+
+        try {
+            const body = {};
+            if (expiresAt) {
+                body.expires_at = new Date(expiresAt).toISOString();
+            } else {
+                body.expires_at = null;
+            }
+
+            const response = await fetchWithAuth(`/api/urls/${shortCode}/reactivate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) throw new Error('FAILED');
+
+            document.getElementById('reactivate-modal').classList.add('hidden');
+            reactivateForm.reset();
+            
+            const searchInput = document.getElementById('search-input');
+            loadDashboard(searchInput ? searchInput.value : '');
+        } catch (error) {
+            errorMsg.innerText = 'ERROR: UNABLE TO REACTIVATE';
+            errorMsg.classList.remove('hidden');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'REACTIVATE';
+        }
     });
 
     const searchInput = document.getElementById('search-input');

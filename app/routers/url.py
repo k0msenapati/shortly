@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 
 from database import AsyncSession, get_session
-from models import URLCreate, URL, URLRead, User
+from models import URLCreate, URL, URLRead, User, URLReactivate
 from core.dependencies import get_current_user
 import services.url as url_service
 
@@ -84,3 +84,47 @@ async def get_url_analytics(
         raise HTTPException(status_code=403, detail="Forbidden")
 
     return URLRead.model_validate(url)
+
+
+@router.post("/{short_code}/reactivate")
+async def reactivate_url(
+    short_code: str,
+    reactivate_data: URLReactivate | None = None,
+    session: AsyncSession = Depends(get_session),
+    current_user: User | None = Depends(get_current_user),
+) -> URLRead:
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    url = await url_service.get_url_by_code(short_code, session)
+    if not url:
+        raise HTTPException(status_code=404, detail="URL not found!")
+
+    if url.user_id and url.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    expires_at = reactivate_data.expires_at if reactivate_data else None
+    updated_url = await url_service.reactivate_url(url.id, expires_at, session) # type: ignore
+    return URLRead.model_validate(updated_url)
+
+
+@router.post("/{short_code}/deactivate")
+async def deactivate_url(
+    short_code: str,
+    session: AsyncSession = Depends(get_session),
+    current_user: User | None = Depends(get_current_user),
+) -> URLRead:
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    url = await url_service.get_url_by_code(short_code, session)
+    if not url:
+        raise HTTPException(status_code=404, detail="URL not found!")
+
+    if url.user_id and url.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    from datetime import datetime, timezone
+    updated_url = await url_service.deactivate_url(url.id, datetime.now(timezone.utc), session) # type: ignore
+    return URLRead.model_validate(updated_url)
+

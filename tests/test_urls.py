@@ -103,3 +103,79 @@ async def test_search_urls_success(client: AsyncClient, auth_headers: dict):
     # At least 3 urls should exist in total
     assert len(urls3) >= 3
 
+
+@pytest.mark.asyncio
+async def test_reactivate_url_success(client: AsyncClient, auth_headers: dict):
+    # 1. Create an expired URL (expires 1 hour ago)
+    from datetime import datetime, timedelta, timezone
+    past_time = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    
+    create_res = await client.post(
+        "/api/urls/shorten",
+        json={"long_url": "https://expired.com", "expires_at": past_time},
+        headers=auth_headers,
+    )
+    assert create_res.status_code == 200
+    short_code = create_res.json()["short_code"]
+    assert create_res.json()["is_expired"] is True
+
+    # 2. Reactivate with no expiration
+    reactivate_res = await client.post(
+        f"/api/urls/{short_code}/reactivate",
+        json={"expires_at": None},
+        headers=auth_headers,
+    )
+    assert reactivate_res.status_code == 200
+    data = reactivate_res.json()
+    assert data["expires_at"] is None
+    assert data["is_expired"] is False
+
+    # 3. Reactivate with a future expiration date
+    future_time = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+    reactivate_res = await client.post(
+        f"/api/urls/{short_code}/reactivate",
+        json={"expires_at": future_time},
+        headers=auth_headers,
+    )
+    assert reactivate_res.status_code == 200
+    data = reactivate_res.json()
+    assert data["is_expired"] is False
+    assert data["expires_at"] is not None
+
+
+@pytest.mark.asyncio
+async def test_reactivate_url_unauthorized(client: AsyncClient):
+    response = await client.post("/api/urls/somecode/reactivate", json={})
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_deactivate_url_success(client: AsyncClient, auth_headers: dict):
+    # 1. Create an active URL
+    create_res = await client.post(
+        "/api/urls/shorten",
+        json={"long_url": "https://active-to-deactive.com"},
+        headers=auth_headers,
+    )
+    assert create_res.status_code == 200
+    short_code = create_res.json()["short_code"]
+    assert create_res.json()["is_expired"] is False
+
+    # 2. Deactivate it
+    deactivate_res = await client.post(
+        f"/api/urls/{short_code}/deactivate",
+        headers=auth_headers,
+    )
+    assert deactivate_res.status_code == 200
+    data = deactivate_res.json()
+    assert data["is_expired"] is True
+    assert data["expires_at"] is not None
+
+
+@pytest.mark.asyncio
+async def test_deactivate_url_unauthorized(client: AsyncClient):
+    response = await client.post("/api/urls/somecode/deactivate")
+    assert response.status_code == 401
+
+
+

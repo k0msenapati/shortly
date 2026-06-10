@@ -42,6 +42,11 @@ class URLCreate(SQLModel):
     expires_at: datetime | None = None
 
 
+class URLReactivate(SQLModel):
+    expires_at: datetime | None = None
+
+
+
 # Response Schemas
 
 

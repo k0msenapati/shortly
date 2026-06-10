@@ -1,4 +1,5 @@
 from sqlmodel import select, update
+from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from models import URL, URLCreate
@@ -60,3 +61,31 @@ async def search_user_urls_by_long_url(
     stmt = select(URL).where(URL.user_id == user_id).where(URL.long_url.contains(query))  # type: ignore
     res = await session.execute(stmt)
     return list(res.scalars().all())
+
+
+async def reactivate_url(
+    id: int, expires_at: datetime | None, session: AsyncSession
+) -> URL:
+    stmt = update(URL).where(URL.id == id).values(expires_at=expires_at)  # type: ignore
+    await session.execute(stmt)
+    await session.commit()
+
+    stmt_select = select(URL).where(URL.id == id)
+    res = await session.execute(stmt_select)
+    return res.scalar_one()
+
+
+async def deactivate_url(
+    id: int, deactivated_at: datetime, session: AsyncSession
+) -> URL:
+    stmt = (
+        update(URL)
+        .where(URL.id == id)  # type: ignore
+        .values(expires_at=deactivated_at)
+    )
+    await session.execute(stmt)
+    await session.commit()
+
+    stmt_select = select(URL).where(URL.id == id)
+    res = await session.execute(stmt_select)
+    return res.scalar_one()
