@@ -1,7 +1,7 @@
 [project]
 name = "shortly"
 version = "0.1.0"
-description = "Add your description here"
+description = "A simple, fast URL shortener with a clean web interface and robust API"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
