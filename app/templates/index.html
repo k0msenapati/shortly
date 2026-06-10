@@ -1,114 +1,196 @@
 {% extends "base.html" %}
 
-{% block title %}Shortly | Shorten, Track, and Share Links{% endblock %}
+{% block title %}Shortly{% endblock %}
+
+{% block head %}
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .animate-fade-in {
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .delay-75 { animation-delay: 75ms; }
+    .delay-150 { animation-delay: 150ms; }
+    .delay-300 { animation-delay: 300ms; }
+    .delay-500 { animation-delay: 500ms; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto pt-16 pb-32 text-center">
-    <h1 class="text-5xl md:text-7xl font-serif font-bold text-white mb-8 leading-tight">
-        Shorten, Track, and Share <span class="text-brand-500">Links</span>
-    </h1>
+<div class="max-w-5xl mx-auto pt-12 pb-12 text-center">
     
-    <div class="max-w-2xl mx-auto mb-12">
-        <form id="shorten-form" class="flex flex-col gap-4">
-            <input type="url" id="long_url" placeholder="Paste your long URL here..." required 
-                class="w-full text-xl py-6 bg-ui-card border-ui-border focus:border-brand-500 placeholder:text-ui-muted">
-            <button type="submit" id="submit-btn" class="btn-green py-5 text-sm uppercase tracking-[0.2em] font-black">
-                Shorten
-            </button>
-        </form>
-        <div id="error-message" class="hidden mt-4 text-rose-500 text-xs font-bold uppercase tracking-widest text-left px-2"></div>
+    <!-- Hero Section -->
+    <div class="mb-12 animate-fade-in opacity-0">
+        <h1 class="text-5xl md:text-7xl font-serif font-bold text-white mb-6 leading-tight max-w-4xl mx-auto">
+            Shorten, Track, and Share <span class="bg-gradient-to-r from-emerald-400 to-brand-500 bg-clip-text text-transparent">Links</span>
+        </h1>
+        <p class="text-sm md:text-base text-ui-muted max-w-xl mx-auto mb-10 leading-relaxed">
+            Create clean connection aliases, download unique tracked QR codes, set link expiration constraints, and manage redirections in real-time.
+        </p>
     </div>
 
-    <div class="flex flex-wrap justify-center gap-8 mb-24">
-        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-muted">
-            <span class="text-brand-500">✓</span> Free
-        </div>
-        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-muted">
-            <span class="text-brand-500">✓</span> QR Codes
-        </div>
-        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-muted">
-            <span class="text-brand-500">✓</span> Analytics
+    <!-- Actions & Star on GitHub -->
+    <div class="flex flex-wrap justify-center items-center gap-4 mb-16 animate-fade-in delay-75 opacity-0">
+        <a href="/register" class="btn-green py-4 px-8 text-xs uppercase tracking-[0.2em] font-black hover:bg-brand-600 transition-colors">
+            Get Started
+        </a>
+        <a href="https://github.com/k0msenapati/shortly" target="_blank" class="inline-flex items-center gap-3 px-8 py-4 border border-ui-border hover:border-ui-muted bg-ui-card hover:bg-ui-card/80 text-xs font-bold uppercase tracking-widest text-white transition-all transform hover:-translate-y-0.5">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+            Star on GitHub
+        </a>
+    </div>
+
+    <!-- Quick Shortener Container -->
+    <div class="max-w-2xl mx-auto mb-20 p-1 bg-gradient-to-r from-emerald-500/10 via-brand-500/10 to-green-600/10 rounded-none shadow-[0_20px_50px_rgba(0,0,0,0.4)] animate-fade-in delay-150 opacity-0">
+        <div class="bg-ui-card p-8 boxy-border">
+            <form id="shorten-form" class="flex flex-col sm:flex-row gap-4">
+                <input type="url" id="long_url" placeholder="Paste your long URL here..." required 
+                    class="flex-grow text-base bg-ui-bg border-ui-border focus:border-brand-500 placeholder:text-ui-muted px-4 py-4 rounded-none outline-none">
+                <button type="submit" id="submit-btn" class="btn-green py-4 px-8 text-xs uppercase tracking-[0.2em] font-black hover:bg-brand-600 active:bg-brand-700 transition-colors">
+                    Shorten
+                </button>
+            </form>
         </div>
     </div>
 
-    <!-- Result Display -->
-    <div id="result-container" class="hidden mb-24 max-w-2xl mx-auto">
-        <div class="boxy-card p-8 text-left">
-            <h3 class="text-[10px] uppercase tracking-widest text-ui-muted mb-4 font-bold">Your Shortened Link</h3>
-            <div class="flex items-center gap-4 bg-ui-bg boxy-border p-4">
-                <span id="short-url-text" class="text-brand-500 font-bold text-lg flex-grow truncate"></span>
-                <button onclick="copyLink(event)" class="text-xs font-bold uppercase tracking-widest text-ui-muted hover:text-white">Copy</button>
+    <!-- Checkpoints -->
+    <div class="flex flex-wrap justify-center gap-8 mb-32 animate-fade-in delay-150 opacity-0">
+        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-muted">
+            <span class="text-brand-500">✓</span> Open Redirections
+        </div>
+        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-muted">
+            <span class="text-brand-500">✓</span> Instant QR Codes
+        </div>
+        <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ui-muted">
+            <span class="text-brand-500">✓</span> Live Statistics
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="mb-32 animate-fade-in delay-300 opacity-0">
+        <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-brand-500 mb-4">Core Utilities</h2>
+        <h3 class="text-3xl md:text-4xl font-serif font-bold text-white mb-16">Designed for Reliability</h3>
+        
+        <div class="grid md:grid-cols-3 gap-6">
+            <div class="boxy-card p-10 text-left hover:-translate-y-1 hover:border-brand-500/50 hover:shadow-[0_10px_30px_rgba(22,163,74,0.05)] transition-all duration-300">
+                <div class="w-8 h-8 text-brand-500 mb-6">
+                    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                </div>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-white mb-4">Redirection</h4>
+                <p class="text-sm text-ui-muted leading-relaxed">Instantly transform long, complex URLs into clean, manageable links with guaranteed fast redirection speeds.</p>
+            </div>
+            <div class="boxy-card p-10 text-left hover:-translate-y-1 hover:border-brand-500/50 hover:shadow-[0_10px_30px_rgba(22,163,74,0.05)] transition-all duration-300">
+                <div class="w-8 h-8 text-brand-500 mb-6">
+                    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-white mb-4">Trackable QR Codes</h4>
+                <p class="text-sm text-ui-muted leading-relaxed">Generate unique QR codes for print or media. Monitor scanning traffic and direct click counts separately.</p>
+            </div>
+            <div class="boxy-card p-10 text-left hover:-translate-y-1 hover:border-brand-500/50 hover:shadow-[0_10px_30px_rgba(22,163,74,0.05)] transition-all duration-300">
+                <div class="w-8 h-8 text-brand-500 mb-6">
+                    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                </div>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-white mb-4">Link Expirations</h4>
+                <p class="text-sm text-ui-muted leading-relaxed">Manage link lifetime by setting expiration thresholds. Easily reactivate expired links at any time.</p>
             </div>
         </div>
     </div>
 
-    <!-- Feature Cards -->
-    <div class="grid md:grid-cols-3 gap-6 mb-24">
-        <div class="boxy-card p-10 text-left">
-            <h4 class="text-xs font-bold uppercase tracking-widest text-white mb-4">Shorten</h4>
-            <p class="text-sm text-ui-muted leading-relaxed">Instantly transform long, complex URLs into clean, manageable links.</p>
-        </div>
-        <div class="boxy-card p-10 text-left">
-            <h4 class="text-xs font-bold uppercase tracking-widest text-white mb-4">QR Code</h4>
-            <p class="text-sm text-ui-muted leading-relaxed">Generate unique QR codes for every link to bridge the physical and digital world.</p>
-        </div>
-        <div class="boxy-card p-10 text-left">
-            <h4 class="text-xs font-bold uppercase tracking-widest text-white mb-4">Track</h4>
-            <p class="text-sm text-ui-muted leading-relaxed">Monitor clicks and geographic data with our dashboard.</p>
+    <!-- How It Works Section -->
+    <div class="mb-32 animate-fade-in delay-300 opacity-0">
+        <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-brand-500 mb-4">Redirection Workflow</h2>
+        <h3 class="text-3xl md:text-4xl font-serif font-bold text-white mb-16">How It Works</h3>
+        
+        <div class="grid md:grid-cols-3 gap-8 relative">
+            <div class="boxy-card p-10 text-left relative overflow-hidden group hover:border-brand-500/50 transition-all duration-300">
+                <div class="absolute top-0 right-0 text-7xl font-serif font-black text-ui-border/30 transform translate-x-4 -translate-y-4 group-hover:text-brand-500/10 transition-colors">01</div>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-white mb-4">Paste Destination</h4>
+                <p class="text-sm text-ui-muted leading-relaxed">Enter your target destination URL in the shortening field above to instantly map it.</p>
+            </div>
+            <div class="boxy-card p-10 text-left relative overflow-hidden group hover:border-brand-500/50 transition-all duration-300">
+                <div class="absolute top-0 right-0 text-7xl font-serif font-black text-ui-border/30 transform translate-x-4 -translate-y-4 group-hover:text-brand-500/10 transition-colors">02</div>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-white mb-4">Download QR Code</h4>
+                <p class="text-sm text-ui-muted leading-relaxed">Copy the shortened URL to your clipboard, and download a unique QR code for physical tracking.</p>
+            </div>
+            <div class="boxy-card p-10 text-left relative overflow-hidden group hover:border-brand-500/50 transition-all duration-300">
+                <div class="absolute top-0 right-0 text-7xl font-serif font-black text-ui-border/30 transform translate-x-4 -translate-y-4 group-hover:text-brand-500/10 transition-colors">03</div>
+                <h4 class="text-xs font-bold uppercase tracking-widest text-white mb-4">Track & Reactivate</h4>
+                <p class="text-sm text-ui-muted leading-relaxed">Check real-time click metrics, filter search queries, deactivate links, or reactivate them indefinitely.</p>
+            </div>
         </div>
     </div>
+
+    <!-- CTA Section -->
+    <div class="boxy-card p-12 md:p-16 mb-32 bg-gradient-to-br from-ui-card to-ui-bg/20 text-center animate-fade-in delay-300 opacity-0 relative overflow-hidden">
+        <div class="absolute -right-16 -top-16 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl"></div>
+        <div class="absolute -left-16 -bottom-16 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl"></div>
+        
+        <h3 class="text-3xl md:text-4xl font-serif font-bold text-white mb-6">Take Control of Your Links Today</h3>
+        <p class="text-sm text-ui-muted max-w-xl mx-auto mb-10 leading-relaxed">
+            Register a free account to access search capabilities across your dashboard, customize link expiration dates, and activate expired links on the fly.
+        </p>
+        <div class="flex justify-center gap-4">
+            <a href="/register" class="btn-green py-4 px-8 text-xs uppercase tracking-[0.2em] font-black hover:bg-brand-600 transition-colors">
+                Create Free Account
+            </a>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="mb-16 text-left max-w-3xl mx-auto animate-fade-in delay-300 opacity-0">
+        <h2 class="text-xs font-bold uppercase tracking-[0.2em] text-brand-500 text-center mb-4">Information</h2>
+        <h3 class="text-3xl md:text-4xl font-serif font-bold text-white text-center mb-16">Frequently Asked Questions</h3>
+        
+        <div class="space-y-4">
+            <details class="group boxy-card p-6 [&_summary::-webkit-details-marker]:hidden cursor-pointer hover:border-ui-muted transition-all duration-300">
+                <summary class="flex justify-between items-center text-sm font-bold uppercase tracking-wider text-white">
+                    <span>How long do shortened links remain active?</span>
+                    <span class="text-ui-muted group-open:rotate-180 transition-transform duration-300">↓</span>
+                </summary>
+                <p class="mt-4 text-sm text-ui-muted leading-relaxed">
+                    By default, Shortly connection aliases remain active indefinitely. You can optionally set custom expiration dates during creation, and deactivate or reactivate links whenever you choose.
+                </p>
+            </details>
+
+            <details class="group boxy-card p-6 [&_summary::-webkit-details-marker]:hidden cursor-pointer hover:border-ui-muted transition-all duration-300">
+                <summary class="flex justify-between items-center text-sm font-bold uppercase tracking-wider text-white">
+                    <span>Can I search through my shortened links?</span>
+                    <span class="text-ui-muted group-open:rotate-180 transition-transform duration-300">↓</span>
+                </summary>
+                <p class="mt-4 text-sm text-ui-muted leading-relaxed">
+                    Yes! Your dashboard is equipped with a search index that allows you to query your links by long URL destination in real-time.
+                </p>
+            </details>
+
+            <details class="group boxy-card p-6 [&_summary::-webkit-details-marker]:hidden cursor-pointer hover:border-ui-muted transition-all duration-300">
+                <summary class="flex justify-between items-center text-sm font-bold uppercase tracking-wider text-white">
+                    <span>Can I track direct clicks vs. QR code scans?</span>
+                    <span class="text-ui-muted group-open:rotate-180 transition-transform duration-300">↓</span>
+                </summary>
+                <p class="mt-4 text-sm text-ui-muted leading-relaxed">
+                    Yes. We automatically track both total link clicks and unique QR code scans separately. You can view the full analytics breakdown on the statistics page for any link.
+                </p>
+            </details>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
     const form = document.getElementById('shorten-form');
-    const resultContainer = document.getElementById('result-container');
-    const shortUrlText = document.getElementById('short-url-text');
-    const errorMessage = document.getElementById('error-message');
-    const submitBtn = document.getElementById('submit-btn');
-
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', (e) => {
         e.preventDefault();
-        const longUrl = document.getElementById('long_url').value;
-        errorMessage.classList.add('hidden');
-        submitBtn.innerText = 'PROCESSING...';
-        submitBtn.disabled = true;
-
-        try {
-            const response = await fetchWithAuth('/api/urls/shorten', {
-                method: 'POST',
-                body: JSON.stringify({ long_url: longUrl })
-            });
-
-            const data = await response.json();
-            if (!response.ok) {
-                let message = 'ERROR';
-                if (data.detail) {
-                    message = Array.isArray(data.detail) ? data.detail.map(err => err.msg).join(', ') : data.detail;
-                }
-                throw new Error(message);
-            }
-
-            const baseUrl = window.location.origin + '/api/urls/';
-            shortUrlText.innerText = baseUrl + data.short_code;
-            resultContainer.classList.remove('hidden');
-            form.reset();
-        } catch (error) {
-            errorMessage.innerText = error.message;
-            errorMessage.classList.remove('hidden');
-        } finally {
-            submitBtn.innerText = 'SHORTEN';
-            submitBtn.disabled = false;
-        }
+        window.location.href = '/register';
     });
-
-    function copyLink(e) {
-        navigator.clipboard.writeText(shortUrlText.innerText);
-        const btn = e.currentTarget;
-        const original = btn.innerText;
-        btn.innerText = 'COPIED';
-        setTimeout(() => btn.innerText = original, 2000);
-    }
 </script>
 {% endblock %}

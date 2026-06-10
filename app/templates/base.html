@@ -49,8 +49,7 @@
         .btn-green { @apply bg-brand-500 hover:bg-brand-600 text-white px-6 py-2 rounded-none font-bold; }
         .btn-outline { @apply border border-ui-border text-ui-muted hover:text-white hover:border-ui-muted rounded-none px-4 py-2 font-bold; }
         
-        /* No animations */
-        * { transition: none !important; transform: none !important; animation: none !important; }
+
         
         input, select, textarea {
             @apply bg-ui-bg border border-ui-border rounded-none text-ui-text px-4 py-2 outline-none focus:border-brand-500;
@@ -82,7 +81,7 @@
             {% block content %}{% endblock %}
         </main>
 
-        <footer id="main-footer" class="mt-32 py-12 border-t border-ui-border text-center">
+        <footer id="main-footer" class="mt-12 py-12 border-t border-ui-border text-center">
             <p class="text-[10px] uppercase tracking-[0.3em] text-ui-muted font-bold">
                 &copy; 2026 Shortly. Professional Utility.
             </p>
